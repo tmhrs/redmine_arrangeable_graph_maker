@@ -5,32 +5,58 @@
   ● 直近のチケット発生タイミングの傾向を分析する事ができます。
 </p>
 
-<% form_tag :action => controller.action_name, 
-            :project_id => @project.identifier do %>
-  <%= render :partial => 'view_selecter' %> 
+<% form_tag :action => controller.action_name,
+            :project_id => @project.identifier, :id => 'query_form' do %>
 <% end %>
+<%= render :partial => 'view_selecter' %>
 
 <h4>日にち毎のチケット件数</h4>
-<img src='<%= url_for :controller => 'graph_maker', 
+<% @target_month %>
+<% @target_month.strftime('%Y/%m/%d') %>
+<img src='<%= url_for :controller => 'graph_maker',
                       :action => 'get_trend_graph',
                       :project_id => @project.identifier,
                       :target_month => @target_month.strftime('%Y/%m/%d'),
                       :each_by => 'day',
                       :graph_variation => 'Bar' %>' >
 
+<% other_formats_links do |f| %>
+  <%= link_to 'CSV', :controller => 'graph_maker',
+                     :action => 'export_trend_csv',
+                     :project_id => @project.identifier,
+                     :target_month => @target_month.strftime('%Y/%m/%d'),
+                     :each_by => 'day' %>
+<% end %>
+
 <h4>時間帯毎のチケット件数</h4>
-<img src='<%= url_for :controller => 'graph_maker', 
+<img src='<%= url_for :controller => 'graph_maker',
                       :action => 'get_trend_graph',
                       :project_id => @project.identifier,
                       :target_month => @target_month.strftime('%Y/%m/%d'),
                       :each_by => 'hour',
                       :graph_variation => 'Bar' %>' >
 
+<% other_formats_links do |f| %>
+  <%= link_to 'CSV', :controller => 'graph_maker',
+                     :action => 'export_trend_csv',
+                     :project_id => @project.identifier,
+                     :target_month => @target_month.strftime('%Y/%m/%d'),
+                     :each_by => 'hour' %>
+<% end %>
+
 <h4>曜日毎のチケット件数</h4>
-<img src='<%= url_for :controller => 'graph_maker', 
+<img src='<%= url_for :controller => 'graph_maker',
                       :action => 'get_trend_graph',
                       :project_id => @project.identifier,
                       :target_month => @target_month.strftime('%Y/%m/%d'),
                       :each_by => 'wday',
                       :graph_variation => 'Bar' %>' >
+
+<% other_formats_links do |f| %>
+  <%= link_to 'CSV', :controller => 'graph_maker',
+                     :action => 'export_trend_csv',
+                     :project_id => @project.identifier,
+                     :target_month => @target_month.strftime('%Y/%m/%d'),
+                     :each_by => 'wday' %>
+<% end %>
 

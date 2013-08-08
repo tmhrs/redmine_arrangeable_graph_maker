@@ -1,18 +1,21 @@
+# encoding: utf-8
 class GraphMakerController < ApplicationController
   unloadable
 
   before_filter :find_project
-  before_filter :authorize, 
+  before_filter :authorize,
                 :only => [:select_view,
-                          :show_long, 
+                          :show_long,
                           :show_trend,
                           :show_customize,
                           :show_completion]
+
   before_filter :get_target_month,
                 :only => [:show_trend,
                           :get_trend_graph,
                           :show_completion,
-                          :get_completion_graph]
+                          :get_completion_graph,
+                          :export_trend_csv]
 
   before_filter :get_months_up_to_now,
                 :only => [:show_trend,
@@ -27,7 +30,10 @@ class GraphMakerController < ApplicationController
   include QueriesHelper
   helper :sort
   include SortHelper
- 
+
+  require 'csv'
+  require 'kconv'
+
   def show_customize
     @queries = Query.find_all_by_project_id(@project.id)
     @group_labels = @queries.map do |query|
@@ -49,10 +55,10 @@ class GraphMakerController < ApplicationController
   def show_completion
 
     @first_interval = params[:first_interval]
-    @first_interval ||= CompletionGraph::DEFAULT_FIRST_INTERVAL 
+    @first_interval ||= CompletionGraph::DEFAULT_FIRST_INTERVAL
 
     advanced_issue = AdvancedIssue.new(CompletionGraph.new(@project.id))
-    
+
     intervals = CompletionGraph.intervals(@first_interval)
     @counts = advanced_issue.count(intervals, @target_month)
 
@@ -88,7 +94,7 @@ class GraphMakerController < ApplicationController
     graph.set_labels_from_array(labels)
 
     send_data(graph.blob,
-              :type => 'image/png', 
+              :type => 'image/png',
               :disposition => 'inline')
 
   end
@@ -96,29 +102,31 @@ class GraphMakerController < ApplicationController
 
   def get_trend_graph
     graph = CustomizedGraph.new(I18n.t("graph_title.trend_#{params[:each_by]}"),
-                                600, 
+                                600,
                                 "Gruff::#{params[:graph_variation]}".constantize)
 
-    trend_graph = AdvancedIssue.new(TrendGraph.new(@project.id, 
+    trend_graph = AdvancedIssue.new(TrendGraph.new(@project.id,
                                                    params[:each_by]))
     count_each_time = trend_graph.count(@target_month)
 
-    graph.push_data("直近1ヶ月分 ", 
+    #graph.push_data("直近1ヶ月分 ",
+    graph.push_data(@target_month.strftime('%Y年 %m月'),
                     count_each_time)
+
     count_each_time.size.times do |num|
       case params[:each_by]
-      when 'day'
-        label = (num + 1).to_s
-      when 'wday'
-        label = I18n.t("graph_items.wday_#{num}")
-      when 'hour'
-        label = num.to_s
+        when 'day'
+          label = (num + 1).to_s
+        when 'wday'
+          label = I18n.t("graph_items.wday_#{num}")
+        when 'hour'
+          label = num.to_s
       end
       graph.push_label(label)
     end
 
     send_data(graph.blob,
-              :type => 'image/png', 
+              :type => 'image/png',
               :disposition => 'inline')
 
   end
@@ -127,14 +135,14 @@ class GraphMakerController < ApplicationController
     long_graph = AdvancedIssue.new(LongGraph.new(@project.id,
                                                  @project.trackers,
                                                  params[:year]))
-    graph = CustomizedGraph.new("#{params[:year]}年度のチケット件数", 
-                                600, 
+    graph = CustomizedGraph.new("#{params[:year]}年度のチケット件数",
+                                600,
                                 Gruff::Line)
 
     count_each_tracker = long_graph.count
 
     @project.trackers.each do |tracker|
-      graph.push_data(tracker.name, 
+      graph.push_data(tracker.name,
                       count_each_tracker[tracker])
     end
 
@@ -144,7 +152,7 @@ class GraphMakerController < ApplicationController
     end
 
     send_data(graph.blob,
-              :type => 'image/png', 
+              :type => 'image/png',
               :disposition => 'inline')
 
   end
@@ -154,18 +162,104 @@ class GraphMakerController < ApplicationController
     @issue_count_by_group = @query.issue_count_by_group
 
     graph = CustomizedGraph.new(@query.name,
-                                600, 
+                                600,
                                 Gruff::Pie)
 
     @issue_count_by_group.each do |group, count|
       group_name = group.to_s.size == 0 ? 'None' : group.to_s
       graph.push_data(group_name, count)
     end
-    
+
     send_data(graph.blob,
-              :type => 'image/png', 
+              :type => 'image/png',
               :disposition => 'inline')
 
+  end
+
+  def export_trend_csv
+    trend_graph = AdvancedIssue.new(TrendGraph.new(@project.id, params[:each_by]))
+    count_each_time = trend_graph.count(@target_month)
+
+    data = CSV.generate do |csv|
+      csv << [params[:each_by], "count"]
+
+      count_each_time.size.times do |num|
+        case params[:each_by]
+          when 'day'
+            label = (num + 1).to_s
+          when 'wday'
+            label = I18n.t("graph_items.wday_#{num}")
+          when 'hour'
+            label = num.to_s
+        end
+        csv << [label, count_each_time[num]]
+      end
+    end
+
+    data = data.tosjis if data
+    send_data(data, type: 'text/csv;charset=shift_jis',
+              filename: "trend_graph_" + params[:each_by] + "_#{Time.now.strftime('%Y%m%d%H%M%S')}.csv")
+  end
+
+  def export_customize_csv
+    retrieve_query
+    @issue_count_by_group = @query.issue_count_by_group
+
+    data = CSV.generate do |csv|
+      csv << ["group", "count"]
+      @issue_count_by_group.each do |group, count|
+        group_name = group.to_s.size == 0 ? 'None' : group.to_s
+        csv << [group_name, count]
+      end
+    end
+
+    data = data.tosjis if data
+    send_data(data, type: 'text/csv;charset=shift_jis',
+              filename: "customize_graph_#{Time.now.strftime('%Y%m%d%H%M%S')}.csv")
+  end
+
+  def export_completion_csv
+    counts = params[:counts].map { |count_str| count_str.to_i }
+    labels = params[:labels]
+
+    data = CSV.generate do |csv|
+      csv << ["completion", "count"]
+      labels.size.times do |num|
+        csv << [labels[num], counts[num]]
+      end
+    end
+
+    data = data.tosjis if data
+    send_data(data, type: 'text/csv;charset=shift_jis',
+              filename: "completion_graph_#{Time.now.strftime('%Y%m%d%H%M%S')}.csv")
+  end
+
+  def export_long_csv
+    long_graph = AdvancedIssue.new(LongGraph.new(@project.id,
+                                                 @project.trackers,
+                                                 params[:year]))
+    count_each_tracker = long_graph.count
+
+    csv_header = ["month"]
+    @project.trackers.each do |tracker|
+      csv_header << tracker.name
+    end
+
+    april = DateTime.new(DateTime.now.year, 4)
+    data = CSV.generate do |csv|
+      csv << csv_header
+      12.times do |num|
+        csv_data = [(april + num.month).month.to_s + "月"]
+        @project.trackers.each do |tracker|
+          csv_data << count_each_tracker[tracker][num]
+        end
+        csv << csv_data
+      end
+    end
+
+    data = data.tosjis if data
+    send_data(data, type: 'text/csv;charset=shift_jis',
+              filename: "long_graph_#{Time.now.strftime('%Y%m%d%H%M%S')}.csv")
   end
 
   private
@@ -179,10 +273,11 @@ class GraphMakerController < ApplicationController
     if params[:target_month] && params[:target_month] =~ /\d+(\/\d+){2}/
       @target_month = DateTime.parse(params[:target_month])
     else
-      @target_month = DateTime.now - 1.month
+      #@target_month = DateTime.now - 1.month
+      @target_month = DateTime.new(DateTime.now.year, DateTime.now.month, 1)
     end
   end
-  
+
   def get_months_up_to_now
     @months = AdvancedDate.months_up_to_now(@project.created_on)
   end

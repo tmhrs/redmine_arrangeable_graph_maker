@@ -6,9 +6,15 @@
 </p>
 <% ((fiscal_year_now(@project.created_on))..(fiscal_year_now(DateTime.now))).reverse_each do |year| %>
   <h4><%= year %></h4>
-  <img src='<%= url_for :controller => 'graph_maker', 
+  <img src='<%= url_for :controller => 'graph_maker',
                         :action => 'get_long_graph',
                         :project_id => @project.identifier,
                         :year => year %>' >
+    <% other_formats_links do |f| %>
+    <%= link_to 'CSV', :controller => 'graph_maker',
+                       :action     => 'export_long_csv',
+                       :project_id => @project.identifier,
+                       :year       => year %>
+    <% end %>
 <% end %>
 

@@ -1,9 +1,11 @@
-<% recent_month = @months.shift %>
+<% if false %><% recent_month = @months.shift %><% end %>
+
 <%= select_tag(:target_month,
                options_for_select( @months.collect { |month|
-                                     [month.strftime('%Y年%m月度'), 
-                                      month.strftime('%Y/%m/%d')] 
-                                   }.unshift(['直近１ヶ月',
-                                               recent_month.strftime('%Y/%m/%d')]),
-                                   @target_month.strftime('%Y/%m/%d')),
-               :onChange => 'this.form.submit();' ) %>
+                                     [month.strftime('%Y年%m月'),
+                                      "/graph_maker/show_trend/" + @project.identifier + "?target_month=" + month.strftime('%Y/%m/%d')]
+                                   #}.unshift(['直近１ヶ月',
+                                               #recent_month.strftime('%Y/%m/%d')]),
+                                   #@target_month.strftime('%Y/%m/%d')),
+                                   }, "/graph_maker/show_trend/" + @project.identifier + "?target_month=" + @target_month.strftime('%Y/%m/%d')),
+               :onchange => 'if (this.value != \'\') { window.location = this.value; }' ) %>

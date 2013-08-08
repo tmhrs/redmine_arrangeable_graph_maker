@@ -21,7 +21,7 @@ class AdvancedDate
       end
     else
       i18n_format = lambda do |time, format|
-        time.to_s + 
+        time.to_s +
         I18n.t("graph_items.#{format.to_s}") +
         I18n.t("graph_items.#{less_or_more_than}")
       end
@@ -33,7 +33,7 @@ class AdvancedDate
       hour = minute / 60
       return i18n_format.call(hour, :hour)
     else
-      day = minute / 60 / 24 
+      day = minute / 60 / 24
       return i18n_format.call(day, :day)
     end
   end
@@ -41,11 +41,12 @@ class AdvancedDate
   def self.months_up_to_now(date_from)
     date_to = self.first_day_in_this_month
     date_from = DateTime.new(date_from.year, date_from.month, 1)
-    months = Array.new([DateTime.now - 1.month + 1.day])
+    #months = Array.new([DateTime.now - 1.month + 1.day])
+    months = Array.new([date_to])
 
     while ((date_to -= 1.month) >= date_from)
       months.push date_to
-    end 
+    end
     return months
   end
 end

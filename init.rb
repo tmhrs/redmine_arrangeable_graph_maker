@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'redmine'
 require 'gruff'
 require 'yaml'
@@ -5,30 +6,30 @@ require 'yaml'
 require_dependency "redmine_arrangeable_graph_maker/hooks"
 Redmine::Plugin.register :redmine_arrangeable_graph_maker do
   name 'Redmine Arrangeable Graph Maker plugin'
-  author 'Ryuma Tsukano'
+  author 'Ryuma Tsukano / y.yoshida'
   description 'チケットを集計したグラフを表示するためのプラグイン'
-  version '0.0.1'
-  url 'http://www.ibs.inte.co.jp'
+  version '0.1.0'
+  url 'https://github.com/tsukano/redmine_arrangeable_graph_maker'
   author_url 'http://www.ibs.inte.co.jp'
 
 
   project_module :arrangeable_graph_maker do
-    permission :view_graph, 
-               :graph_maker => [:get_trend_graph, 
+    permission :view_graph,
+               :graph_maker => [:get_trend_graph,
                                 :get_customize_graph,
                                 :get_long_graph,
                                 :get_completion_graph,
-                                :show_long, 
+                                :show_long,
                                 :show_trend,
                                 :show_customize,
                                 :show_completion]
   end
 
-#  menu :project_menu, 
-#       :long_graph, 
-#       { :controller => 'graph_maker', 
-#         :action => 'show_long' }, 
-#       :after => :calendar, 
+#  menu :project_menu,
+#       :long_graph,
+#       { :controller => 'graph_maker',
+#         :action => 'show_long' },
+#       :after => :calendar,
 #       :param => :project_id
 #
 #  menu :project_menu,
@@ -45,11 +46,11 @@ Redmine::Plugin.register :redmine_arrangeable_graph_maker do
 #       :after => :calendar,
 #       :param => :project_id
 #
-#  menu :project_menu, 
-#       :trend_graph, 
-#       { :controller => 'graph_maker', 
-#         :action => 'show_trend' }, 
-#       :after => :calendar, 
+#  menu :project_menu,
+#       :trend_graph,
+#       { :controller => 'graph_maker',
+#         :action => 'show_trend' },
+#       :after => :calendar,
 #       :param => :project_id
 
 end

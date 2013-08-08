@@ -1,2 +1,3 @@
-graph_font_path: "/usr/share/fonts/japanese/TrueType/sazanami-gothic.ttf"
+graph_font_path: 'C:\Windows\Fonts\MSGOTHIC.TTC'
+local_time_zone: 'Tokyo'
 
