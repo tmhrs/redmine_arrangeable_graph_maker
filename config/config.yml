@@ -1,3 +1,2 @@
-graph_font_path: 'C:\Windows\Fonts\MSGOTHIC.TTC'
+graph_font_path: '/usr/share/fonts/ipa-pgothic/ipagp.ttf'
 local_time_zone: 'Tokyo'
-

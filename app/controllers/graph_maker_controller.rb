@@ -37,6 +37,7 @@ class GraphMakerController < ApplicationController
   def show_customize
     @queries = Query.find_all_by_project_id(@project.id)
     @group_labels = @queries.map do |query|
+      next if query.user_id != User.current.id && !query.is_public
       if query.group_by =~ /cf_(\d+)/
         CustomField.find($1).name
       else
