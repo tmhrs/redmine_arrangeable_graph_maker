@@ -8,7 +8,7 @@ Redmine::Plugin.register :redmine_arrangeable_graph_maker do
   name 'Redmine Arrangeable Graph Maker plugin'
   author 'Ryuma Tsukano / y.yoshida'
   description 'チケットを集計したグラフを表示するためのプラグイン'
-  version '0.1.0'
+  version '0.1.1'
   url 'https://github.com/tsukano/redmine_arrangeable_graph_maker'
   author_url 'http://www.ibs.inte.co.jp'
 
